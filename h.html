@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Quest | Multilingual Text Adventure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #25D366;
+            --secondary-color: #DCF8C6;
+            --dark-color: #075E54;
+            --light-color: #ECE5DD;
+            --text-color: #000;
+            --received-color: #FFFFFF;
+            --danger-color: #FF4444;
+            --warning-color: #FFBB33;
+            --success-color: #00C851;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', 'Arial', 'Helvetica', sans-serif;
+        }
+
+        body {
+            background-color: #e5ddd5;
+            background-image: url('https://web.whatsapp.com/img/bg-chat-tile-light_a4be512e7195b6b733d9110b408f075d.png');
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 450px;
+            height: 80vh;
+            background-color: var(--light-color);
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: fadeInUp 0.5s 0.2s forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .header {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .header h1 {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .header .status {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        .chat-area {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #e5ddd5;
+            background-image: url('https://web.whatsapp.com/img/bg-chat-tile-light_a4be512e7195b6b733d9110b408f075d.png');
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 7.5px;
+            margin-bottom: 5px;
+            position: relative;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease;
+            transform-origin: bottom;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .received {
+            align-self: flex-start;
+            background-color: var(--received-color);
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
+        }
+
+        .sent {
+            align-self: flex-end;
+            background-color: var(--secondary-color);
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
+        }
+
+        .system {
+            align-self: center;
+            background-color: rgba(0, 0, 0, 0.05);
+            color: #666;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 5px 10px;
+            border-radius: 15px;
+            margin: 5px 0;
+        }
+
+        .typing-indicator {
+            align-self: flex-start;
+            background-color: var(--received-color);
+            padding: 8px 12px;
+            border-radius: 7.5px;
+            display: inline-flex;
+            margin-bottom: 5px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #999;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typingAnimation 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingAnimation {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .option-btn {
+            background-color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .option-btn:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .option-btn:hover::after {
+            transform: translateX(0);
+        }
+
+        .input-area {
+            padding: 10px;
+            background-color: #f0f0f0;
+            display: flex;
+            border-top: 1px solid #ddd;
+            position: relative;
+            z-index: 10;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 10px 15px;
+            border-radius: 20px;
+            border: none;
+            outline: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            box-shadow: 0 0 0 2px rgba(37, 211, 102, 0.3);
+        }
+
+        .send-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .send-btn:hover {
+            background-color: #128C7E;
+            transform: scale(1.1);
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .time {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 3px;
+            text-align: right;
+        }
+
+        .emoji {
+            font-size: 1.2rem;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 100;
+            padding: 20px;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+            backdrop-filter: blur(5px);
+        }
+
+        .game-over.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .game-over h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-over p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            max-width: 80%;
+            line-height: 1.5;
+        }
+
+        .restart-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .restart-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .restart-btn:hover {
+            background-color: #128C7E;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .restart-btn:hover::before {
+            left: 100%;
+        }
+
+        .restart-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .stats-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 5;
+        }
+
+        .stat {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            backdrop-filter: blur(2px);
+            transform: translateX(100px);
+            opacity: 0;
+            animation: slideIn 0.5s 0.8s forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .health-bar {
+            width: 100px;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-left: 5px;
+        }
+
+        .health-fill {
+            height: 100%;
+            background-color: var(--success-color);
+            width: 100%;
+            transition: width 0.5s ease, background-color 0.3s;
+        }
+
+        .inventory {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            backdrop-filter: blur(2px);
+            transform: translateX(-100px);
+            opacity: 0;
+            animation: slideInLeft 0.5s 0.8s forwards;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @keyframes slideInLeft {
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .inventory-items {
+            display: flex;
+            gap: 5px;
+            margin-top: 3px;
+            flex-wrap: wrap;
+        }
+
+        .inventory-item {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 2px 5px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+        }
+
+        .achievement {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            z-index: 200;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .achievement.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .achievement-icon {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 150;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background-color: rgba(0, 0, 0, 0.1);
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 20;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), #4CAF50);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .floating-emoji {
+            position: absolute;
+            font-size: 2rem;
+            z-index: 5;
+            pointer-events: none;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        .language-selector {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 200;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .language-title {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: var(--primary-color);
+        }
+
+        .language-option {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 200px;
+            text-align: center;
+        }
+
+        .language-option:hover {
+            background-color: #128C7E;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .bangla-font {
+            font-family: 'SolaimanLipi', 'Siyam Rupali', 'Arial', sans-serif;
+        }
+    </style>
+    <!-- Include Bangla font -->
+    <link href="https://fonts.maateen.me/solaiman-lipi/font.css" rel="stylesheet">
+</head>
+<body>
+    <div class="game-container">
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat">
+                ❤️ <span id="healthText">Health</span>:
+                <div class="health-bar">
+                    <div class="health-fill" id="healthBar"></div>
+                </div>
+            </div>
+            <div class="stat">
+                ⭐ <span id="scoreText">Score</span>: <span id="scoreDisplay">0</span>
+            </div>
+        </div>
+        
+        <div class="inventory" id="inventoryDisplay">
+            🎒 <span id="inventoryText">Inventory</span>: <span id="inventoryCount">0</span>
+            <div class="inventory-items" id="inventoryItems"></div>
+        </div>
+        
+        <div class="header">
+            <h1>Emoji Quest</h1>
+            <div class="status">
+                <div class="status-dot"></div>
+                <span id="onlineText">Online</span>
+            </div>
+        </div>
+        
+        <div class="chat-area" id="chatArea">
+            <!-- Messages will appear here -->
+        </div>
+        
+        <div class="input-area">
+            <input type="text" class="input-field" id="userInput" placeholder="Type your message..." disabled>
+            <button class="send-btn" id="sendBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="game-over" id="gameOver">
+            <h2 id="gameOverTitle">Game Over</h2>
+            <p id="gameOverMessage">You've reached the end of your adventure!</p>
+            <div id="finalStats" style="margin-bottom: 20px;"></div>
+            <button class="restart-btn" id="restartBtn">Play Again</button>
+        </div>
+
+        <div class="language-selector" id="languageSelector">
+            <h2 class="language-title">Choose Language</h2>
+            <button class="language-option" id="englishBtn">English</button>
+            <button class="language-option bangla-font" id="banglaBtn">বাংলা</button>
+        </div>
+    </div>
+
+    <div class="achievement" id="achievement">
+        <span class="achievement-icon">🏆</span>
+        <div class="achievement-text"></div>
+    </div>
+
+    <audio id="messageSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3" preload="auto"></audio>
+    <audio id="positiveSound" src="https://assets.mixkit.co/sfx/preview/mixkit-positive-interface-beep-221.mp3" preload="auto"></audio>
+    <audio id="negativeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3" preload="auto"></audio>
+    <audio id="winSound" src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3" preload="auto"></audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const chatArea = document.getElementById('chatArea');
+            const userInput = document.getElementById('userInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const gameOverScreen = document.getElementById('gameOver');
+            const gameOverTitle = document.getElementById('gameOverTitle');
+            const gameOverMessage = document.getElementById('gameOverMessage');
+            const restartBtn = document.getElementById('restartBtn');
+            const healthBar = document.getElementById('healthBar');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const inventoryDisplay = document.getElementById('inventoryDisplay');
+            const inventoryCount = document.getElementById('inventoryCount');
+            const inventoryItems = document.getElementById('inventoryItems');
+            const progressBar = document.getElementById('progressBar');
+            const achievement = document.getElementById('achievement');
+            const finalStats = document.getElementById('finalStats');
+            const languageSelector = document.getElementById('languageSelector');
+            const englishBtn = document.getElementById('englishBtn');
+            const banglaBtn = document.getElementById('banglaBtn');
+            
+            // UI Text Elements
+            const healthText = document.getElementById('healthText');
+            const scoreText = document.getElementById('scoreText');
+            const inventoryText = document.getElementById('inventoryText');
+            const onlineText = document.getElementById('onlineText');
+            
+            // Audio elements
+            const messageSound = document.getElementById('messageSound');
+            const positiveSound = document.getElementById('positiveSound');
+            const negativeSound = document.getElementById('negativeSound');
+            const winSound = document.getElementById('winSound');
+            
+            // Game state
+            let gameState = {
+                currentScene: 'start',
+                inventory: [],
+                health: 100,
+                score: 0,
+                achievements: [],
+                visitedScenes: [],
+                gameProgress: 0,
+                language: 'english' // Default language
+            };
+            
+            // Translations
+            const translations = {
+                english: {
+                    ui: {
+                        health: "Health",
+                        score: "Score",
+                        inventory: "Inventory",
+                        online: "Online",
+                        chooseLanguage: "Choose Language",
+                        playAgain: "Play Again",
+                        typeMessage: "Type your message..."
+                    },
+                    scenes: {
+                        start: {
+                            message: "📱 *New message from Mysterious Stranger*:\n\nHey there! Ready for an EMOJI ADVENTURE? 😎\n\nI need your help to solve some mysteries using only emojis! Are you in?",
+                            options: [
+                                { text: "👍 Yes! Let's do this!", nextScene: "scene1" },
+                                { text: "🤔 I'm not sure...", nextScene: "hesitant" }
+                            ]
+                        },
+                        hesitant: {
+                            message: "Come on! It'll be fun! 🎉\n\nI promise it's not scary... unless you choose the scary path. 😈\n\nWhat do you say?",
+                            options: [
+                                { text: "Okay fine, I'm in!", nextScene: "scene1" },
+                                { text: "Sorry, not today", nextScene: "gameOverNo" }
+                            ]
+                        },
+                        gameOverNo: {
+                            message: "Alright, maybe another time! 👋\n\n*Mysterious Stranger has left the chat*"
+                        },
+                        // More English translations...
+                    }
+                },
+                bangla: {
+                    ui: {
+                        health: "স্বাস্থ্য",
+                        score: "স্কোর",
+                        inventory: "ইনভেন্টরি",
+                        online: "অনলাইন",
+                        chooseLanguage: "ভাষা নির্বাচন করুন",
+                        playAgain: "আবার খেলুন",
+                        typeMessage: "আপনার বার্তা টাইপ করুন..."
+                    },
+                    scenes: {
+                        start: {
+                            message: "📱 *অজানা ব্যক্তি থেকে নতুন বার্তা*:\n\nহ্যালো! ইমোজি অ্যাডভেঞ্চারের জন্য প্রস্তুত? 😎\n\nআমার কিছু রহস্য সমাধান করতে আপনার সাহায্য দরকার, শুধুমাত্র ইমোজি ব্যবহার করে! আপনি কি আগ্রহী?",
+                            options: [
+                                { text: "👍 হ্যাঁ! শুরু করি!", nextScene: "scene1" },
+                                { text: "🤔 আমি নিশ্চিত নই...", nextScene: "hesitant" }
+                            ]
+                        },
+                        hesitant: {
+                            message: "চলুন! এটা মজার হবে! 🎉\n\nআমি প্রতিশ্রুতি দিচ্ছি এটা ভীতিকর না... যদি না আপনি ভীতিকর পথ বাছেন. 😈\n\nআপনি কি বলেন?",
+                            options: [
+                                { text: "ঠিক আছে, আমি রাজি!", nextScene: "scene1" },
+                                { text: "ক্ষমা করবেন, আজ না", nextScene: "gameOverNo" }
+                            ]
+                        },
+                        gameOverNo: {
+                            message: "ঠিক আছে, অন্য সময় দেখা হবে! 👋\n\n*অজানা ব্যক্তি চ্যাট ছেড়ে চলে গেছেন*"
+                        },
+                        // More Bangla translations...
+                    }
+                }
+            };
+            
+            // Game scenes (now language-neutral with emoji)
+            const scenes = {
+                start: {
+                    message: "start",
+                    options: [
+                        { text: "👍 {yes}", nextScene: "scene1" },
+                        { text: "🤔 {notSure}", nextScene: "hesitant" }
+                    ],
+                    onEnter: function() {
+                        playSound(messageSound);
+                        updateProgress(5);
+                    }
+                },
+                hesitant: {
+                    message: "hesitant",
+                    options: [
+                        { text: "{okayLetsGo}", nextScene: "scene1" },
+                        { text: "{sorryNotToday}", nextScene: "gameOverNo" }
+                    ],
+                    onEnter: function() {
+                        playSound(messageSound);
+                    }
+                },
+                scene1: {
+                    message: "scene1",
+                    options: [
+                        { text: "🚪 {woodenDoor}", nextScene: "woodenDoor" },
+                        { text: "🚪 {metalDoor}", nextScene: "metalDoor" },
+                        { text: "🏰 {castleGate}", nextScene: "castleGate" }
+                    ],
+                    onEnter: function() {
+                        playSound(messageSound);
+                        updateProgress(10);
+                        showAchievement("{adventureBegins}", "{journeyStarts}");
+                    }
+                },
+                woodenDoor: {
+                    message: "woodenDoor",
+                    options: [
+                        { text: "⬅️ {goLeft}", nextScene: "coldPath" },
+                        { text: "➡️ {goRight}", nextScene: "musicPath" },
+                        { text: "💎 {takeGemLeave}", nextScene: "gemEnd" }
+                    ],
+                    onEnter: function() {
+                        playSound(messageSound);
+                        addToInventory('✨ {shinyGem}');
+                        updateScore(20);
+                        updateHealth(0);
+                        updateProgress(15);
+                        createFloatingEmoji('💎', 50, 50);
+                        showAchievement("{treasureHunter}", "{firstItemFound}");
+                    }
+                },
+                metalDoor: {
+                    message: "metalDoor",
+                    input: true,
+                    validate: function(input) {
+                        return input === "0042" || input === "42";
+                    },
+                    correctScene: "codeCorrect",
+                    wrongScene: "codeWrong",
+                    onEnter: function() {
+                        playSound(messageSound);
+                        updateProgress(15);
+                    }
+                },
+                castleGate: {
+                    message: "castleGate",
+                    input: true,
+                    validate: function(input) {
+                        return input.toLowerCase() === "m";
+                    },
+                    correctScene: "riddleCorrect",
+                    wrongScene: "riddleWrong",
+                    onEnter: function() {
+                        playSound(messageSound);
+                        updateProgress(15);
+                    }
+                },
+                codeCorrect: {
+                    message: "codeCorrect",
+                    options: [
+                        { text: "{exploreLab}", nextScene: "labScene" },
+                        { text: "{askWhatsGoingOn}", nextScene: "labExplanation" }
+                    ],
+                    onEnter: function() {
+                        playSound(winSound);
+                        updateScore(50);
+                        updateHealth(10);
+                        updateProgress(25);
+                        createFloatingEmoji('🔬', 30, 70);
+                        showAchievement("{codeBreaker}", "{solvedSecretCode}");
+                    }
+                },
+                codeWrong: {
+                    message: "codeWrong",
+                    isEnd: true,
+                    onEnter: function() {
+                        playSound(negativeSound);
+                        updateScore(-10);
+                        updateHealth(-20);
+                        updateProgress(5);
+                    }
+                },
+                riddleCorrect: {
+                    message: "riddleCorrect",
+                    options: [
+                        { text: "⬆️ {ascendStairs}", nextScene: "goldenStairs" },
+                        { text: "⬇️ {descendStairs}", nextScene: "stoneStairs" }
+                    ],
+                    onEnter: function() {
+                        playSound(positiveSound);
+                        updateScore(40);
+                        updateHealth(0);
+                        updateProgress(25);
+                        createFloatingEmoji('🏆', 70, 30);
+                        showAchievement("{riddleMaster}", "{solvedRiddle}");
+                    }
+                },
+                riddleWrong: {
+                    message: "riddleWrong",
+                    options: [
+                        { text: "{startOver}", nextScene: "scene1" }
+                    ],
+                    onEnter: function() {
+                        playSound(negativeSound);
+                        updateScore(-15);
+                        updateHealth(-10);
+                        updateProgress(5);
+                    }
+                },
+                gameOverNo: {
+                    message: "gameOverNo",
+                    isEnd: true,
+                    onEnter: function() {
+                        playSound(negativeSound);
+                        updateProgress(100);
+                    }
+                },
+                gemEnd: {
+                    message: "gemEnd",
+                    isEnd: true,
+                    onEnter: function() {
+                        playSound(positiveSound);
+                        updateScore(10);
+                        updateProgress(100);
+                        createConfetti();
+                        showAchievement("{earlyExit}", "{leftWithTreasure}");
+                    }
+                }
+                // More scenes would be added here...
+            };
+            
+            // Scene content translations
+            const sceneContent = {
+                english: {
+                    start: "📱 *New message from Mysterious Stranger*:\n\nHey there! Ready for an EMOJI ADVENTURE? 😎\n\nI need your help to solve some mysteries using only emojis! Are you in?",
+                    yes: "Yes! Let's do this!",
+                    notSure: "I'm not sure...",
+                    hesitant: "Come on! It'll be fun! 🎉\n\nI promise it's not scary... unless you choose the scary path. 😈\n\nWhat do you say?",
+                    okayLetsGo: "Okay fine, I'm in!",
+                    sorryNotToday: "Sorry, not today",
+                    gameOverNo: "Alright, maybe another time! 👋\n\n*Mysterious Stranger has left the chat*",
+                    scene1: "Great! Here's your first challenge:\n\n🔍 You find yourself in a mysterious place. There are three doors:\n\n1️⃣ 🚪 - Wooden door with strange carvings\n2️⃣ 🚪 - Metal door with a keypad\n3️⃣ 🏰 - Ornate castle gate",
+                    woodenDoor: "Wooden door",
+                    metalDoor: "Metal door",
+                    castleGate: "Castle gate",
+                    woodenDoorMsg: "You enter the wooden door and find a dark hallway. There's a faint glowing object on the floor:\n\n✨ A shiny gem!\n\nAnd two paths ahead:\n\n⬅️ Left - Cold breeze coming from this side\n➡️ Right - You hear faint music",
+                    goLeft: "Go left",
+                    goRight: "Go right",
+                    takeGemLeave: "Take the gem and leave",
+                    shinyGem: "Shiny Gem",
+                    metalDoorMsg: "The metal door requires a 4-digit code. You notice a note on the wall:\n\n🧾 'The code is the number of letters in the answer to life, the universe, and everything'\n\nWhat do you enter? (Type a 4-digit number)",
+                    codeCorrect: "✅ Correct! The door slides open revealing a high-tech lab. Scientists cheer your arrival!\n\n👩‍🔬 'Welcome! We've been expecting someone smart enough to get in!'",
+                    exploreLab: "Explore the lab",
+                    askWhatsGoingOn: "Ask what's going on",
+                    codeWrong: "❌ Wrong code! The door locks permanently. Guess you'll never know what was inside...\n\nGame over!",
+                    castleGateMsg: "As you approach the castle gate, a guard stops you:\n\n💂 'Halt! Only those who can solve my riddle may pass!'\n\n'What comes once in a minute, twice in a moment, but never in a thousand years?'",
+                    riddleCorrect: "💂 'Correct! The letter M! You may pass.'\n\nYou enter a grand hall with two staircases:\n\n⬆️ Golden stairs leading up\n⬇️ Stone stairs leading down",
+                    ascendStairs: "Ascend the golden stairs",
+                    descendStairs: "Descend the stone stairs",
+                    riddleWrong: "💂 'Wrong! Begone!' The guard pushes you out and slams the gate.\n\nMaybe try another door next time!",
+                    startOver: "Start over",
+                    gemEnd: "You take the shiny gem and exit. Not much of an adventure, but hey, free gem! 💎\n\n*Final Score: {score}*\n\nThanks for playing!",
+                    adventureBegins: "Adventure Begins",
+                    journeyStarts: "Your journey starts now!",
+                    treasureHunter: "Treasure Hunter",
+                    firstItemFound: "Found your first item!",
+                    codeBreaker: "Code Breaker",
+                    solvedSecretCode: "Solved the secret code!",
+                    riddleMaster: "Riddle Master",
+                    solvedRiddle: "Solved the guard's riddle!",
+                    earlyExit: "Early Exit",
+                    leftWithTreasure: "Left with the treasure!"
+                },
+                bangla: {
+                    start: "📱 *অজানা ব্যক্তি থেকে নতুন বার্তা*:\n\nহ্যালো! ইমোজি অ্যাডভেঞ্চারের জন্য প্রস্তুত? 😎\n\nআমার কিছু রহস্য সমাধান করতে আপনার সাহায্য দরকার, শুধুমাত্র ইমোজি ব্যবহার করে! আপনি কি আগ্রহী?",
+                    yes: "হ্যাঁ! শুরু করি!",
+                    notSure: "আমি নিশ্চিত নই...",
+                    hesitant: "চলুন! এটা মজার হবে! 🎉\n\nআমি প্রতিশ্রুতি দিচ্ছি এটা ভীতিকর না... যদি না আপনি ভীতিকর পথ বাছেন. 😈\n\nআপনি কি বলেন?",
+                    okayLetsGo: "ঠিক আছে, আমি রাজি!",
+                    sorryNotToday: "ক্ষমা করবেন, আজ না",
+                    gameOverNo: "ঠিক আছে, অন্য সময় দেখা হবে! 👋\n\n*অজানা ব্যক্তি চ্যাট ছেড়ে চলে গেছেন*",
+                    scene1: "দারুণ! এখানে আপনার প্রথম চ্যালেঞ্জ:\n\n🔍 আপনি নিজেকে একটি রহস্যময় জায়গায় খুঁজে পেয়েছেন। তিনটি দরজা আছে:\n\n1️⃣ 🚪 - অদ্ভুত খোদাই করা কাঠের দরজা\n2️⃣ 🚪 - কীপ্যাড সহ ধাতব দরজা\n3️⃣ 🏰 - অলঙ্কৃত দুর্গ গেট",
+                    woodenDoor: "কাঠের দরজা",
+                    metalDoor: "ধাতব দরজা",
+                    castleGate: "দুর্গ গেট",
+                    woodenDoorMsg: "আপনি কাঠের দরজা দিয়ে প্রবেশ করেন এবং একটি অন্ধকার হলওয়ে খুঁজে পান। মেঝেতে একটি ম্লান জ্বলজ্বলে বস্তু আছে:\n\n✨ একটি চকচকে রত্ন!\n\nএবং সামনে দুটি পথ:\n\n⬅️ বাম - এই দিক থেকে ঠান্ডা বাতাস আসছে\n➡️ ডান - আপনি মৃদু সঙ্গীত শুনতে পাচ্ছেন",
+                    goLeft: "বামে যান",
+                    goRight: "ডানে যান",
+                    takeGemLeave: "রত্ন নিয়ে চলে যান",
+                    shinyGem: "চকচকে রত্ন",
+                    metalDoorMsg: "ধাতব দরজার জন্য একটি 4-সংখ্যার কোড প্রয়োজন। আপনি দেয়ালে একটি নোট দেখতে পাচ্ছেন:\n\n🧾 'কোডটি হল জীবন, মহাবিশ্ব এবং সব কিছুর উত্তর হিসাবে অক্ষরের সংখ্যা'\n\nআপনি কি লিখবেন? (একটি 4-সংখ্যার সংখ্যা টাইপ করুন)",
+                    codeCorrect: "✅ সঠিক! দরজা খুলে একটি হাই-টেক ল্যাব দেখা যাচ্ছে। বিজ্ঞানীরা আপনার আগমনে উল্লাস করছেন!\n\n👩‍🔬 'স্বাগতম! আমরা আপনার মতো বুদ্ধিমান কাউকে ভিতরে আসার জন্য অপেক্ষা করছিলাম!'",
+                    exploreLab: "ল্যাব অন্বেষণ করুন",
+                    askWhatsGoingOn: "জিজ্ঞাসা করুন কি হচ্ছে",
+                    codeWrong: "❌ ভুল কোড! দরজা স্থায়ীভাবে লক হয়ে গেছে। মনে হয় আপনি কখনই জানতে পারবেন না ভিতরে কি ছিল...\n\nগেম ওভার!",
+                    castleGateMsg: "আপনি যখন দুর্গ গেটের কাছে যান, একজন প্রহরী আপনাকে থামায়:\n\n💂 'থামো! শুধুমাত্র যারা আমার ধাঁধা সমাধান করতে পারে তারাই পাস করতে পারে!'\n\n'কিসে একবার আসে একটি মিনিটে, দুইবার একটি মুহূর্তে, কিন্তু হাজার বছরে একবারও না?'",
+                    riddleCorrect: "💂 'সঠিক! M অক্ষর! আপনি পাস করতে পারেন।'\n\nআপনি একটি মহান হলের মধ্যে প্রবেশ করেন যেখানে দুটি সিঁড়ি আছে:\n\n⬆️ উপরের দিকে সোনার সিঁড়ি\n⬇️ নিচের দিকে পাথরের সিঁড়ি",
+                    ascendStairs: "সোনার সিঁড়ি দিয়ে উপরে যান",
+                    descendStairs: "পাথরের সিঁড়ি দিয়ে নিচে যান",
+                    riddleWrong: "💂 'ভুল! চলে যাও!' প্রহরী আপনাকে বের করে দেয় এবং গেট বন্ধ করে দেয়।\n\nপরের বার অন্য দরজা চেষ্টা করুন!",
+                    startOver: "আবার শুরু করুন",
+                    gemEnd: "আপনি চকচকে রত্নটি নিয়ে বেরিয়ে যান। অনেক বড় অ্যাডভেঞ্চার না, কিন্তু হেই, বিনামূল্যে রত্ন! 💎\n\n*চূড়ান্ত স্কোর: {score}*\n\nখেলার জন্য ধন্যবাদ!",
+                    adventureBegins: "অ্যাডভেঞ্চার শুরু",
+                    journeyStarts: "আপনার যাত্রা এখন শুরু হয়েছে!",
+                    treasureHunter: "ধনুরন্ধ্র শিকারী",
+                    firstItemFound: "আপনার প্রথম আইটেম পাওয়া গেছে!",
+                    codeBreaker: "কোড ব্রেকার",
+                    solvedSecretCode: "গোপন কোড সমাধান করেছেন!",
+                    riddleMaster: "ধাঁধা মাস্টার",
+                    solvedRiddle: "প্রহরীর ধাঁধা সমাধান করেছেন!",
+                    earlyExit: "প্রাথমিক প্রস্থান",
+                    leftWithTreasure: "ধনসম্পদ নিয়ে চলে গেছেন!"
+                }
+            };
+            
+            // Initialize the game
+            initGame();
+            
+            function initGame() {
+                // Show language selector first
+                showLanguageSelector();
+                
+                // Initialize game state
+                gameState = {
+                    currentScene: 'start',
+                    inventory: [],
+                    health: 100,
+                    score: 0,
+                    achievements: [],
+                    visitedScenes: [],
+                    gameProgress: 0,
+                    language: 'english'
+                };
+                
+                chatArea.innerHTML = '';
+                userInput.disabled = true;
+            }
+            
+            function showLanguageSelector() {
+                languageSelector.style.display = 'flex';
+                
+                // Set up language buttons
+                englishBtn.onclick = function() {
+                    playSound(positiveSound);
+                    gameState.language = 'english';
+                    document.body.classList.remove('bangla-font');
+                    startGame();
+                };
+                
+                banglaBtn.onclick = function() {
+                    playSound(positiveSound);
+                    gameState.language = 'bangla';
+                    document.body.classList.add('bangla-font');
+                    startGame();
+                };
+                
+                // Translate UI for language selector
+                const lang = translations[gameState.language] || translations.english;
+                englishBtn.textContent = 'English';
+                banglaBtn.textContent = 'বাংলা';
+            }
+            
+            function startGame() {
+                // Hide language selector
+                languageSelector.style.display = 'none';
+                
+                // Update UI language
+                updateUILanguage();
+                
+                // Load first scene
+                loadScene(gameState.currentScene);
+            }
+            
+            function updateUILanguage() {
+                const lang = translations[gameState.language] || translations.english;
+                healthText.textContent = lang.ui.health;
+                scoreText.textContent = lang.ui.score;
+                inventoryText.textContent = lang.ui.inventory;
+                onlineText.textContent = lang.ui.online;
+                userInput.placeholder = lang.ui.typeMessage;
+                restartBtn.textContent = lang.ui.playAgain;
+            }
+            
+            function loadScene(sceneId) {
+                if (!scenes[sceneId]) return;
+                
+                // Track visited scenes
+                if (!gameState.visitedScenes.includes(sceneId)) {
+                    gameState.visitedScenes.push(sceneId);
+                }
+                
+                const scene = scenes[sceneId];
+                const langContent = sceneContent[gameState.language] || sceneContent.english;
+                
+                // Get translated message (or fallback to English)
+                let message = langContent[sceneId + 'Msg'] || langContent[sceneId] || sceneContent.english[sceneId];
+                
+                // Replace {tokens} with translations
+                message = replaceTokens(message);
+                
+                // Add message to chat
+                addMessage(message, 'received');
+                
+                // Handle scene entry actions
+                if (scene.onEnter) {
+                    scene.onEnter();
+                }
+                
+                // Update UI
+                updateUI();
+                
+                // Check if game over
+                if (scene.isEnd) {
+                    // Replace {score} in end messages
+                    if (message.includes('{score}')) {
+                        message = message.replace('{score}', gameState.score);
+                    }
+                    
+                    setTimeout(() => {
+                        showGameOver(message);
+                    }, 1500);
+                    return;
+                }
+                
+                // Handle options or input
+                if (scene.options) {
+                    // Translate options
+                    const translatedOptions = scene.options.map(option => {
+                        return {
+                            text: replaceTokens(option.text),
+                            nextScene: option.nextScene
+                        };
+                    });
+                    showOptions(translatedOptions);
+                } else if (scene.input) {
+                    userInput.disabled = false;
+                    userInput.focus();
+                }
+            }
+            
+            function replaceTokens(text) {
+                const langContent = sceneContent[gameState.language] || sceneContent.english;
+                
+                return text.replace(/\{([^}]+)\}/g, (match, token) => {
+                    return langContent[token] || sceneContent.english[token] || token;
+                });
+            }
+            
+            function addMessage(text, type) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${type}`;
+                
+                // Replace *text* with bold text
+                text = text.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+                
+                // Add emoji styling
+                text = text.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])/g, '<span class="emoji">$1</span>');
+                
+                messageDiv.innerHTML = text;
+                
+                // Add timestamp
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'time';
+                const now = new Date();
+                timeDiv.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                messageDiv.appendChild(timeDiv);
+                chatArea.appendChild(messageDiv);
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+            
+            function showTypingIndicator() {
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'typing-indicator';
+                
+                for (let i = 0; i < 3; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'typing-dot';
+                    typingDiv.appendChild(dot);
+                }
+                
+                chatArea.appendChild(typingDiv);
+                chatArea.scrollTop = chatArea.scrollHeight;
+                return typingDiv;
+            }
+            
+            function showOptions(options) {
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'options-container';
+                
+                options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.className = 'option-btn';
+                    if (gameState.language === 'bangla') {
+                        button.classList.add('bangla-font');
+                    }
+                    button.textContent = option.text;
+                    button.onclick = () => {
+                        playSound(positiveSound);
+                        optionsContainer.remove();
+                        addMessage(option.text, 'sent');
+                        
+                        // Show typing indicator before next message
+                        const typing = showTypingIndicator();
+                        setTimeout(() => {
+                            typing.remove();
+                            gameState.currentScene = option.nextScene;
+                            loadScene(option.nextScene);
+                        }, 1500);
+                    };
+                    optionsContainer.appendChild(button);
+                });
+                
+                chatArea.appendChild(optionsContainer);
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+            
+            function addToInventory(item) {
+                const translatedItem = replaceTokens(item);
+                
+                if (!gameState.inventory.includes(translatedItem)) {
+                    gameState.inventory.push(translatedItem);
+                    updateUI();
+                    
+                    // Add to inventory display with animation
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'inventory-item';
+                    if (gameState.language === 'bangla') {
+                        itemElement.classList.add('bangla-font');
+                    }
+                    itemElement.textContent = translatedItem;
+                    itemElement.style.opacity = '0';
+                    itemElement.style.transform = 'scale(0.5)';
+                    inventoryItems.appendChild(itemElement);
+                    
+                    setTimeout(() => {
+                        itemElement.style.transition = 'all 0.3s ease';
+                        itemElement.style.opacity = '1';
+                        itemElement.style.transform = 'scale(1)';
+                    }, 10);
+                }
+            }
+            
+            function updateScore(points) {
+                gameState.score += points;
+                if (gameState.score < 0) gameState.score = 0;
+                scoreDisplay.textContent = gameState.score;
+                
+                // Animate score change
+                scoreDisplay.classList.add('pulse');
+                setTimeout(() => {
+                    scoreDisplay.classList.remove('pulse');
+                }, 500);
+            }
+            
+            function updateHealth(change) {
+                gameState.health += change;
+                if (gameState.health > 100) gameState.health = 100;
+                if (gameState.health < 0) gameState.health = 0;
+                
+                healthBar.style.width = gameState.health + '%';
+                
+                // Update health bar color based on value
+                if (gameState.health > 70) {
+                    healthBar.style.backgroundColor = 'var(--success-color)';
+                } else if (gameState.health > 30) {
+                    healthBar.style.backgroundColor = 'var(--warning-color)';
+                } else {
+                    healthBar.style.backgroundColor = 'var(--danger-color)';
+                }
+                
+                // Animate health change
+                healthBar.classList.add('pulse');
+                setTimeout(() => {
+                    healthBar.classList.remove('pulse');
+                }, 500);
+                
+                // Check for death
+                if (gameState.health <= 0) {
+                    setTimeout(() => {
+                        const langContent = sceneContent[gameState.language] || sceneContent.english;
+                        showGameOver(langContent.healthZero || "Your health reached zero! Game over.");
+                    }, 1000);
+                }
+            }
+            
+            function updateProgress(percent) {
+                gameState.gameProgress = percent;
+                progressBar.style.width = percent + '%';
+            }
+            
+            function updateUI() {
+                scoreDisplay.textContent = gameState.score;
+                healthBar.style.width = gameState.health + '%';
+                inventoryCount.textContent = gameState.inventory.length;
+                
+                // Update inventory display
+                inventoryItems.innerHTML = '';
+                gameState.inventory.forEach(item => {
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'inventory-item';
+                    if (gameState.language === 'bangla') {
+                        itemElement.classList.add('bangla-font');
+                    }
+                    itemElement.textContent = item;
+                    inventoryItems.appendChild(itemElement);
+                });
+            }
+            
+            function showGameOver(message) {
+                const lang = translations[gameState.language] || translations.english;
+                
+                if (message.includes("Congratulations") || message.includes("completed") || message.includes("secret")) {
+                    gameOverTitle.textContent = lang.ui.youWin || "You Win!";
+                } else {
+                    gameOverTitle.textContent = lang.ui.gameOver || "Game Over";
+                }
+                
+                gameOverMessage.innerHTML = message.replace(/\n/g, '<br>');
+                
+                // Show final stats
+                finalStats.innerHTML = `
+                    <div style="margin-bottom: 10px;">⭐ ${lang.ui.finalScore || "Final Score"}: ${gameState.score}</div>
+                    <div style="margin-bottom: 10px;">🎒 ${lang.ui.itemsCollected || "Items Collected"}: ${gameState.inventory.length}</div>
+                    <div>🏆 ${lang.ui.achievements || "Achievements"}: ${gameState.achievements.length}</div>
+                `;
+                
+                gameOverScreen.classList.add('show');
+            }
+            
+            function showAchievement(title, description) {
+                const langContent = sceneContent[gameState.language] || sceneContent.english;
+                const translatedTitle = replaceTokens(title);
+                const translatedDesc = replaceTokens(description);
+                
+                if (!gameState.achievements.includes(translatedTitle)) {
+                    gameState.achievements.push(translatedTitle);
+                    
+                    const achievementText = document.querySelector('.achievement-text');
+                    achievementText.textContent = translatedTitle;
+                    
+                    if (gameState.language === 'bangla') {
+                        achievementText.classList.add('bangla-font');
+                    } else {
+                        achievementText.classList.remove('bangla-font');
+                    }
+                    
+                    achievement.classList.add('show');
+                    
+                    setTimeout(() => {
+                        achievement.classList.remove('show');
+                    }, 3000);
+                    
+                    // Play achievement sound
+                    playSound(winSound);
+                }
+            }
+            
+            function createFloatingEmoji(emoji, leftPercent, topPercent) {
+                const emojiElement = document.createElement('div');
+                emojiElement.className = 'floating-emoji';
+                emojiElement.textContent = emoji;
+                emojiElement.style.left = leftPercent + '%';
+                emojiElement.style.top = topPercent + '%';
+                
+                document.body.appendChild(emojiElement);
+                
+                // Remove after animation
+                setTimeout(() => {
+                    emojiElement.remove();
+                }, 3000);
+            }
+            
+            function createConfetti() {
+                for (let i = 0; i < 50; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    
+                    // Random properties
+                    const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    const size = Math.random() * 10 + 5;
+                    const left = Math.random() * 100;
+                    const animationDuration = Math.random() * 3 + 2;
+                    
+                    confetti.style.backgroundColor = color;
+                    confetti.style.width = size + 'px';
+                    confetti.style.height = size + 'px';
+                    confetti.style.left = left + '%';
+                    confetti.style.animation = `fall ${animationDuration}s linear forwards`;
+                    
+                    document.body.appendChild(confetti);
+                    
+                    // Remove after animation
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, animationDuration * 1000);
+                }
+                
+                // Add falling animation
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes fall {
+                        to {
+                            transform: translateY(100vh) rotate(360deg);
+                            opacity: 0;
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            function playSound(sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log("Audio play prevented:", e));
+            }
+            
+            // Event listeners
+            sendBtn.addEventListener('click', handleInput);
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') handleInput();
+            });
+            
+            restartBtn.addEventListener('click', function() {
+                playSound(positiveSound);
+                gameOverScreen.classList.remove('show');
+                initGame();
+            });
+            
+            function handleInput() {
+                const input = userInput.value.trim();
+                if (!input) return;
+                
+                const currentScene = scenes[gameState.currentScene];
+                
+                addMessage(input, 'sent');
+                userInput.value = '';
+                
+                // Show typing indicator
+                const typing = showTypingIndicator();
+                
+                setTimeout(() => {
+                    typing.remove();
+                    
+                    if (currentScene.validate(input)) {
+                        playSound(positiveSound);
+                        gameState.currentScene = currentScene.correctScene;
+                    } else {
+                        playSound(negativeSound);
+                        gameState.currentScene = currentScene.wrongScene;
+                        chatArea.classList.add('shake');
+                        setTimeout(() => {
+                            chatArea.classList.remove('shake');
+                        }, 500);
+                    }
+                    
+                    loadScene(gameState.currentScene);
+                }, 1500);
+            }
+        });
+    </script>
+</body>
+</html>
